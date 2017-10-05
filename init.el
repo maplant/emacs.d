@@ -12,32 +12,35 @@
 
 ;; Package configurations:
 
+(use-package magit
+  :ensure t)
+
 (use-package solarized-theme
   :ensure t
   :config
   (setq solarized-distinct-fringe-background t
-	solarized-distinct-doc-face t
-	solarized-emphasize-indicators t))
+        solarized-distinct-doc-face t
+        solarized-emphasize-indicators t))
 
 (use-package multi-compile
   :ensure t
   :config
   (setq multi-compile-alist
-	'((c-mode . (("build" . "make -k")
-		     ("clean" . "make clean all")))
-	  (c++-mode . (("build" . "make -k")
-		       ("clean" . "make clean all")))
-	  (go-mode . (("build" . "go build")
-		      ("run" . "go run")))
-	  (rust-mode . (("build" . "cargo build --color always")
-			("debug" . "cargo run --color always")
-			("release" . "cargo run --release --color always")
-			("test" . "cargo test --color always"))))))
+        '((c-mode . (("build" . "make -k")
+                     ("clean" . "make clean all")))
+          (c++-mode . (("build" . "make -k")
+                       ("clean" . "make clean all")))
+          (go-mode . (("build" . "go build")
+                      ("run" . "go run")))
+          (rust-mode . (("build" . "cargo build --color always")
+                        ("debug" . "cargo run --color always")
+                        ("release" . "cargo run --release --color always")
+                        ("test" . "cargo test --color always"))))))
 
 (setq-default c-default-style "k&r"
-	      c-basic-offset 8
-	      tab-width 4
-	      indent-tabs-mode nil)
+              c-basic-offset 8
+              tab-width 4
+              indent-tabs-mode nil)
 
 (use-package rust-mode
   :ensure t
@@ -55,19 +58,19 @@
 
   ;; Custom hook for rust mode.
   (add-hook 'rust-mode-hook
-	    (lambda ()
-	      (nlinum-mode)
-	      (subword-mode 1)
-	      (set-fill-column 80)
-	      (fci-mode))))
+            (lambda ()
+              (nlinum-mode)
+              (subword-mode 1)
+              (set-fill-column 80)
+              (fci-mode))))
 
 ;; We can't use racer mode until emacs 26 comes out. Line numbers are just too slow.
-					;(with-eval-after-load 'company
-					;  (add-to-list 'company-backends 'company-racer))
-
-					;(add-hook 'rust-mode-hook #'racer-mode)
-					;(add-hook 'racer-mode-hook #'eldoc-mode)
-					;(add-hook 'racer-mode-hook #'company-mode)
+;; (with-eval-after-load 'company
+;;  (add-to-list 'company-backends 'company-racer))
+;;
+;;(add-hook 'rust-mode-hook #'racer-mode)
+;;(add-hook 'racer-mode-hook #'eldoc-mode)
+;;(add-hook 'racer-mode-hook #'company-mode)
 
 (defun metal-mode-hook ()
   (setq tab-width 8)
@@ -79,26 +82,26 @@
 
 (use-package c-mode
   :bind (:map c-mode-map
-	      ("C-c C-r" . multi-compile-run)
-	      ("C-c C-d" . disaster)
-	      ("[mouse-3]" . ggtags-find-tag-mouse))
+              ("C-c C-r" . multi-compile-run)
+              ("C-c C-d" . disaster)
+              ("[mouse-3]" . ggtags-find-tag-mouse))
   :config
   (add-hook 'c-mode-common-hook 'metal-mode-hook))
 
 (use-package c++-mode
   :bind (:map c++-mode-map
-	      ("C-c C-r" . multi-compile-run)
-	      ("C-c C-d" . disaster)
-	      ("[mouse-3]" . ggtags-find-tag-mouse))
+              ("C-c C-r" . multi-compile-run)
+              ("C-c C-d" . disaster)
+              ("[mouse-3]" . ggtags-find-tag-mouse))
   :config
   (add-hook 'c++-mode-common-hook 'metal-mode-hook))
 
 (use-package asm-mode
   :config
   (add-hook 'asm-mode-hook
-	    (lambda ()
-	      (ggtags-mode)
-	      (nlinum-mode))))
+            (lambda ()
+              (ggtags-mode)
+              (nlinum-mode))))
 
 (use-package tex-mode
   :config
@@ -112,26 +115,26 @@
   :interpreter "python"
   :config
   (add-hook 'python-mode-hook
-	    (lambda ()
-	      (nlinum-mode))))
+            (lambda ()
+              (nlinum-mode))))
 
 (use-package go-mode
   :bind (:map go-mode-map
-	      ("C-c C-r" . multi-compile-run))
+              ("C-c C-r" . multi-compile-run))
   :config
   (add-hook 'go-mode-hook
-	    (lambda ()
-	      (nlinum-mode)
-	      (subword-mode 1)
-	      (set-fill-column 80)
-	      (fci-mode))))
+            (lambda ()
+              (nlinum-mode)
+              (subword-mode 1)
+              (set-fill-column 80)
+              (fci-mode))))
 
 (use-package helm
   :ensure t
   :bind (("M-x" . helm-M-x)
-	 ("C-x C-f" . helm-find-files)
-	 ("C-x C-b" . helm-buffers-list)
-	 ([f1] . helm-buffers-list))
+         ("C-x C-f" . helm-find-files)
+         ("C-x C-b" . helm-buffers-list)
+         ([f1] . helm-buffers-list))
   :config
   (helm-mode 1))
 
@@ -142,29 +145,29 @@
 (use-package windmove
   :ensure t
   :bind (("M-<up>" . windmove-up)
-	 ("M-<down>" . windmove-down)
-	 ("M-<left>" . windmove-left)
-	 ("M-<right>" . windmove-up)))
+         ("M-<down>" . windmove-down)
+         ("M-<left>" . windmove-left)
+         ("M-<right>" . windmove-up)))
 
 (add-hook 'emacs-lisp-mode-hook (lambda () (nlinum-mode)))
 
 (add-hook 'eshell-preoutput-filter-functions 'ansi-color-apply)
 
 (add-hook 'compilation-filter-hook
-	  (lambda ()
-	    (toggle-read-only)
-	    (ansi-color-apply-on-region compilation-filter-start (point-max))
-	    (toggle-read-only)))
+          (lambda ()
+            (toggle-read-only)
+            (ansi-color-apply-on-region compilation-filter-start (point-max))
+            (toggle-read-only)))
 
 ;; Global keybindings:
 
 (bind-keys* ("<prior>" . backward-paragraph)
-	    ("<next>" . forward-paragraph)
-	    ;; Make control tab always insert a tab character
-	    ("C-<tab>" .  (lambda ()
-			    (interactive)
-			    (insert-char 9 1)
-			    (untabify (- (point) 1) (point)))))
+            ("<next>" . forward-paragraph)
+            ;; Make control tab always insert a tab character
+            ("C-<tab>" .  (lambda ()
+                            (interactive)
+                            (insert-char 9 1)
+                            (untabify (- (point) 1) (point)))))
 
 ;; Emacs internal configuration:
 
