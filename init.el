@@ -42,6 +42,10 @@
               tab-width 4
               indent-tabs-mode nil)
 
+(use-package racer
+  :ensure t
+  :config (add-hook 'racer-mode-hook #'eldoc-mode))
+
 (use-package rust-mode
   :ensure t
   :mode ("\\.rs\\'" . rust-mode)
@@ -54,22 +58,21 @@
   (define-key rust-mode-map	(kbd ")")
     (lambda () (interactive) (insert ")") (rust-mode-indent-line)))
   (define-key rust-mode-map	(kbd "]")
-    (lambda () (interactive) (insert "]") (rust-mode-indent-line)))
-
+	(lambda () (interactive) (insert "]") (rust-mode-indent-line)))
   ;; Custom hook for rust mode.
   (add-hook 'rust-mode-hook
-            (lambda ()
-              (nlinum-mode)
-              (subword-mode 1)
-              (set-fill-column 80)
-              (fci-mode))))
+			(lambda ()
+			  (nlinum-mode)
+			  (subword-mode 1)
+			  (set-fill-column 80)
+			  (fci-mode)))
+  (add-hook 'rust-mode-hook #'racer-mode))
 
 ;; We can't use racer mode until emacs 26 comes out. Line numbers are just too slow.
 ;; (with-eval-after-load 'company
 ;;  (add-to-list 'company-backends 'company-racer))
 ;;
 ;;(add-hook 'rust-mode-hook #'racer-mode)
-;;(add-hook 'racer-mode-hook #'eldoc-mode)
 ;;(add-hook 'racer-mode-hook #'company-mode)
 
 (defun metal-mode-hook ()
