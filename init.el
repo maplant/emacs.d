@@ -10,6 +10,18 @@
 
 (require 'bind-key)
 
+(defun line-number-mode ()
+    (if (version< emacs-version "26")
+        (nlinum-mode)
+      (display-line-numbers-mode)))
+
+(fringe-mode (if (version< emacs-version "26")
+                 ;; Left only fringe
+                 '(nil . 0)
+               ;; No fringe
+               0))
+
+
 ;; Package configurations:
 
 (use-package magit
@@ -62,7 +74,7 @@
   ;; Custom hook for rust mode.
   (add-hook 'rust-mode-hook
 			(lambda ()
-			  (nlinum-mode)
+			  (line-number-mode)
 			  (subword-mode 1)
 			  (set-fill-column 80)
 			  (fci-mode)))
@@ -77,26 +89,19 @@
 
 (defun metal-mode-hook ()
   (setq tab-width 8)
-  (nlinum-mode)
+  (line-number-mode)
   (subword-mode 1)
   (ggtags-mode)
   (set-fill-column 80)
   (fci-mode))
 
-(use-package c-mode
+(use-package cc-mode
   :bind (:map c-mode-map
               ("C-c C-r" . multi-compile-run)
               ("C-c C-d" . disaster)
               ("[mouse-3]" . ggtags-find-tag-mouse))
   :config
-  (add-hook 'c-mode-common-hook 'metal-mode-hook))
-
-(use-package c++-mode
-  :bind (:map c++-mode-map
-              ("C-c C-r" . multi-compile-run)
-              ("C-c C-d" . disaster)
-              ("[mouse-3]" . ggtags-find-tag-mouse))
-  :config
+  (add-hook 'c-mode-common-hook 'metal-mode-hook)
   (add-hook 'c++-mode-common-hook 'metal-mode-hook))
 
 (use-package asm-mode
@@ -104,14 +109,14 @@
   (add-hook 'asm-mode-hook
             (lambda ()
               (ggtags-mode)
-              (nlinum-mode))))
+              (line-number-mode))))
 
 (use-package tex-mode
   :config
   (add-hook 'tex-mode-hook
-	    (lambda ()
-	      (flyspell-mode)
-	      (nlinum-mode))))
+	        (lambda ()
+	          (flyspell-mode)
+	          (line-number-mode))))
 
 (use-package python
   :mode ("\\.py\\'" . python-mode)
@@ -119,7 +124,7 @@
   :config
   (add-hook 'python-mode-hook
             (lambda ()
-              (nlinum-mode))))
+              (line-number-mode))))
 
 (use-package go-mode
   :bind (:map go-mode-map
@@ -127,7 +132,7 @@
   :config
   (add-hook 'go-mode-hook
             (lambda ()
-              (nlinum-mode)
+              (line-number-mode)
               (subword-mode 1)
               (set-fill-column 80)
               (fci-mode))))
@@ -152,7 +157,7 @@
          ("M-<left>" . windmove-left)
          ("M-<right>" . windmove-up)))
 
-(add-hook 'emacs-lisp-mode-hook (lambda () (nlinum-mode)))
+(add-hook 'emacs-lisp-mode-hook (lambda () (line-number-mode)))
 
 (add-hook 'eshell-preoutput-filter-functions 'ansi-color-apply)
 
@@ -187,7 +192,6 @@
    (quote
     ("5900bec889f57284356b8216a68580bfa6ece73a6767dfd60196e56d050619bc" "a8245b7cc985a0610d71f9852e9f2767ad1b852c2bdea6f4aadc12cce9c4d6d0" "b81bfd85aed18e4341dbf4d461ed42d75ec78820a60ce86730fc17fc949389b2" "365d9553de0e0d658af60cff7b8f891ca185a2d7ba3fc6d29aadba69f5194c7f" "6f11ad991da959fa8de046f7f8271b22d3a97ee7b6eca62c81d5a917790a45d9" "611e38c2deae6dcda8c5ac9dd903a356c5de5b62477469133c89b2785eb7a14d" "4182c491b5cc235ba5f27d3c1804fc9f11f51bf56fb6d961f94788be034179ad" "8aebf25556399b58091e533e455dd50a6a9cba958cc4ebb0aab175863c25b9a4" "d677ef584c6dfc0697901a44b885cc18e206f05114c8a3b7fde674fce6180879" default)))
  '(display-time-mode t)
- '(fringe-mode (quote (nil . 0)) nil (fringe))
  '(inhibit-startup-screen t)
  '(jdee-db-active-breakpoint-face-colors (cons "#0d0f11" "#7FC1CA"))
  '(jdee-db-requested-breakpoint-face-colors (cons "#0d0f11" "#A8CE93"))
