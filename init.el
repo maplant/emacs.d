@@ -47,6 +47,7 @@
           (rust-mode . (("build" . "cargo build --color always")
                         ("debug" . "cargo run --color always")
                         ("release" . "cargo run --release --color always")
+                        ("bench" . "cargo bench --color always")
                         ("test" . "cargo test --color always"))))))
 
 (setq-default c-default-style "k&r"
@@ -62,7 +63,7 @@
   :ensure t
   :mode ("\\.rs\\'" . rust-mode)
   :bind (:map rust-mode-map
-	      ("C-c C-r" . multi-compile-run))
+	          ("C-c C-r" . multi-compile-run))
   :config
   ;; Electric indent for list closing delimeters
   (define-key rust-mode-map	(kbd "}")
@@ -76,8 +77,7 @@
 			(lambda ()
 			  (line-number-mode)
 			  (subword-mode 1)
-			  (set-fill-column 80)
-			  (fci-mode)))
+			  (set-fill-column 80)))
   (add-hook 'rust-mode-hook #'racer-mode))
 
 ;; We can't use racer mode until emacs 26 comes out. Line numbers are just too slow.
@@ -87,13 +87,16 @@
 ;;(add-hook 'rust-mode-hook #'racer-mode)
 ;;(add-hook 'racer-mode-hook #'company-mode)
 
+(use-package ggtags
+  :ensure t)
+
 (defun metal-mode-hook ()
   (setq tab-width 8)
   (line-number-mode)
   (subword-mode 1)
   (ggtags-mode)
-  (set-fill-column 80)
-  (fci-mode))
+  (set-fill-column 80))
+;  (fci-mode))
 
 (use-package cc-mode
   :bind (:map c-mode-map
@@ -103,6 +106,10 @@
   :config
   (add-hook 'c-mode-common-hook 'metal-mode-hook)
   (add-hook 'c++-mode-common-hook 'metal-mode-hook))
+
+(use-package css-mode
+  :config
+  (add-hook 'css-mode-hook #'line-number-mode))
 
 (use-package asm-mode
   :config
@@ -117,6 +124,34 @@
 	        (lambda ()
 	          (flyspell-mode)
 	          (line-number-mode))))
+
+(use-package org
+  :bind (:map org-mode-map
+              ("C-c C-r" . org-publish-project))
+  :config
+  (add-hook 'org-mode-hook #'flyspell-mode)
+  (require 'ox-publish)
+  (setq org-publish-project-alist
+        '(
+          ("org-notes"
+           :base-directory "~/prog/blog/org/"
+           :base-extension "org"
+           :publishing-directory "~/prog/blog/publish"
+           :recursive t
+           :publishing-function org-html-publish-to-html
+           :headline-levels 4
+           :auto-preamble t
+           :auto-sitemap t
+           :sitemap-filename "sitemap.org"
+           :sitemap-titile "Sitemap")
+          ("org-static"
+           :base-directory "~/prog/blog/org"
+           :base-extension "html\\|css\\|js\\|png\\|jpg\\|gif\\|pdf\\|ogg\\|flac"
+           :publishing-directory "~/prog/blog/publish"
+           :recursive t
+           :publishing-function org-publish-attachment)
+          ("org"
+           :components ("org-notes" "org-static")))))
 
 (use-package python
   :mode ("\\.py\\'" . python-mode)
@@ -204,10 +239,12 @@
  '(org-fontify-whole-heading-line t)
  '(package-selected-packages
    (quote
-    (helm disaster use-package doom-themes telephone-line minimap multi-compile fill-column-indicator column-marker multiple-cursors eshell-prompt-extras nlinum rust-playground company-racer company flycheck-rust flymake-rust racer cargo haskell-mode solarized-theme rust-mode magit go-mode glsl-mode ggtags cider)))
+    (htmlize helm disaster use-package doom-themes telephone-line minimap multi-compile fill-column-indicator column-marker multiple-cursors eshell-prompt-extras nlinum rust-playground company-racer company flycheck-rust flymake-rust racer cargo haskell-mode solarized-theme rust-mode magit go-mode glsl-mode ggtags cider)))
+ '(rust-indent-where-clause nil)
  '(scroll-bar-mode nil)
  '(show-paren-mode t)
- '(tool-bar-mode nil))
+ '(tool-bar-mode nil)
+ '(tramp-syntax (quote default) nil (tramp)))
 
 (set-default-font "Anonymous Pro-12")
 (custom-set-faces
@@ -215,4 +252,4 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- )
+ '(line-number ((t (:inherit (shadow default) :background "#073642")))))
