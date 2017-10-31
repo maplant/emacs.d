@@ -75,17 +75,12 @@
   ;; Custom hook for rust mode.
   (add-hook 'rust-mode-hook
 			(lambda ()
-			  (line-number-mode)
 			  (subword-mode 1)
 			  (set-fill-column 80)))
+  (add-hook 'rust-mode-hook #'line-number-mode)
+  (add-hook 'rust-mode-hook #'flyspell-prog-mode)
   (add-hook 'rust-mode-hook #'racer-mode))
 
-;; We can't use racer mode until emacs 26 comes out. Line numbers are just too slow.
-;; (with-eval-after-load 'company
-;;  (add-to-list 'company-backends 'company-racer))
-;;
-;;(add-hook 'rust-mode-hook #'racer-mode)
-;;(add-hook 'racer-mode-hook #'company-mode)
 
 (use-package ggtags
   :ensure t)
@@ -95,8 +90,8 @@
   (line-number-mode)
   (subword-mode 1)
   (ggtags-mode)
+  (flyspell-prog-mode)
   (set-fill-column 80))
-;  (fci-mode))
 
 (use-package cc-mode
   :bind (:map c-mode-map
@@ -116,6 +111,7 @@
   (add-hook 'asm-mode-hook
             (lambda ()
               (ggtags-mode)
+              (flyspell-prog-mode)
               (line-number-mode))))
 
 (use-package tex-mode
@@ -124,6 +120,9 @@
 	        (lambda ()
 	          (flyspell-mode)
 	          (line-number-mode))))
+
+(defun publish-latex-file (_plist filename pub-dir)
+  (call-process "pdflatex" nil nil nil filename))
 
 (use-package org
   :bind (:map org-mode-map
@@ -144,6 +143,11 @@
            :auto-sitemap t
            :sitemap-filename "sitemap.org"
            :sitemap-titile "Sitemap")
+          ("org-latex"
+           :base-directory "~/prog/blog/org"
+           :base-extension "tex"
+           :publishing-directory "~/prog/blog/org"
+           :publishing-function publish-latex-file)
           ("org-static"
            :base-directory "~/prog/blog/org"
            :base-extension "html\\|css\\|js\\|png\\|jpg\\|gif\\|pdf\\|ogg\\|flac"
@@ -151,7 +155,7 @@
            :recursive t
            :publishing-function org-publish-attachment)
           ("org"
-           :components ("org-notes" "org-static")))))
+           :components ("org-notes" "org-latex" "org-static")))))
 
 (use-package python
   :mode ("\\.py\\'" . python-mode)
