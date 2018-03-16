@@ -1,7 +1,7 @@
 (require 'package)
 
 (add-to-list 'package-archives
-	     '("melpa" . "http://melpa.org/packages/"))
+	     '("melpa" . "https://melpa.org/packages/"))
 
 (package-initialize)
 
@@ -21,8 +21,13 @@
                ;; No fringe
                0))
 
+(exec-path-from-shell-copy-env "CLASSPATH")
+(exec-path-from-shell-initialize)
 
 ;; Package configurations:
+
+(use-package antlr
+  :mode ("\\.g4\\'" . antlr-mode))
 
 (use-package magit
   :ensure t)
@@ -50,20 +55,39 @@
                         ("bench" . "cargo bench --color always")
                         ("test" . "cargo test --color always"))))))
 
+(use-package lsp-ui
+  :ensure t)
+
+(use-package lsp-mode
+  :ensure t
+  :after (lsp-ui)
+  :config
+  (require 'lsp-imenu)
+  (add-hook 'lsp-mode-hook 'lsp-ui-mode)
+  (add-hook 'lsp-after-open-hook 'lsp-enable-imenu)
+  (setq lsp-rust-rls-command '("rustup" "run" "nightly" "rls")))
+
+(use-package lsp-rust
+  :ensure t
+  :after (lsp-mode))
+
 (setq-default c-default-style "k&r"
-              c-basic-offset 8
-              tab-width 4
+              c-basic-offset 2
+              tab-width 2
               indent-tabs-mode nil)
 
 (use-package racer
   :ensure t
-  :config (add-hook 'racer-mode-hook #'eldoc-mode))
+  :config
+  (setq racer-rust-src-path "/Users/map/.rustup/toolchains/nightly-x86_64-apple-darwin/lib/rustlib/src/rust/src")
+  (add-hook 'racer-mode-hook #'eldoc-mode))
 
 (use-package rust-mode
   :ensure t
   :mode ("\\.rs\\'" . rust-mode)
   :bind (:map rust-mode-map
-	          ("C-c C-r" . multi-compile-run))
+	            ("C-c C-r" . multi-compile-run))
+  :after (lsp-rust)
   :config
   ;; Electric indent for list closing delimeters
   (define-key rust-mode-map	(kbd "}")
@@ -71,7 +95,7 @@
   (define-key rust-mode-map	(kbd ")")
     (lambda () (interactive) (insert ")") (rust-mode-indent-line)))
   (define-key rust-mode-map	(kbd "]")
-	(lambda () (interactive) (insert "]") (rust-mode-indent-line)))
+	  (lambda () (interactive) (insert "]") (rust-mode-indent-line)))
   ;; Custom hook for rust mode.
   (add-hook 'rust-mode-hook
 			(lambda ()
@@ -79,14 +103,15 @@
 			  (set-fill-column 80)))
   (add-hook 'rust-mode-hook #'line-number-mode)
   (add-hook 'rust-mode-hook #'flyspell-prog-mode)
-  (add-hook 'rust-mode-hook #'racer-mode))
+  (add-hook 'rust-mode-hook #'flycheck-mode)
+  (add-hook 'rust-mode-hook #'lsp-rust-enable))
 
 
 (use-package ggtags
   :ensure t)
 
 (defun metal-mode-hook ()
-  (setq tab-width 8)
+  (setq tab-width 2)
   (line-number-mode)
   (subword-mode 1)
   (ggtags-mode)
@@ -99,6 +124,8 @@
               ("C-c C-d" . disaster)
               ("[mouse-3]" . ggtags-find-tag-mouse))
   :config
+  (c-set-offset 'innamespace 0)
+  (c-set-offset 'inextern-lang 0)
   (add-hook 'c-mode-common-hook 'metal-mode-hook)
   (add-hook 'c++-mode-common-hook 'metal-mode-hook))
 
@@ -194,7 +221,7 @@
   :bind (("M-<up>" . windmove-up)
          ("M-<down>" . windmove-down)
          ("M-<left>" . windmove-left)
-         ("M-<right>" . windmove-up)))
+         ("M-<right>" . windmove-right)))
 
 (add-hook 'emacs-lisp-mode-hook (lambda () (line-number-mode)))
 
@@ -226,29 +253,30 @@
  '(ansi-color-faces-vector
    [default default default italic underline success warning error])
  '(column-number-mode t)
- '(custom-enabled-themes (quote (solarized-dark)))
+ '(custom-enabled-themes '(solarized-light))
  '(custom-safe-themes
-   (quote
-    ("5900bec889f57284356b8216a68580bfa6ece73a6767dfd60196e56d050619bc" "a8245b7cc985a0610d71f9852e9f2767ad1b852c2bdea6f4aadc12cce9c4d6d0" "b81bfd85aed18e4341dbf4d461ed42d75ec78820a60ce86730fc17fc949389b2" "365d9553de0e0d658af60cff7b8f891ca185a2d7ba3fc6d29aadba69f5194c7f" "6f11ad991da959fa8de046f7f8271b22d3a97ee7b6eca62c81d5a917790a45d9" "611e38c2deae6dcda8c5ac9dd903a356c5de5b62477469133c89b2785eb7a14d" "4182c491b5cc235ba5f27d3c1804fc9f11f51bf56fb6d961f94788be034179ad" "8aebf25556399b58091e533e455dd50a6a9cba958cc4ebb0aab175863c25b9a4" "d677ef584c6dfc0697901a44b885cc18e206f05114c8a3b7fde674fce6180879" default)))
+   '("5900bec889f57284356b8216a68580bfa6ece73a6767dfd60196e56d050619bc" "a8245b7cc985a0610d71f9852e9f2767ad1b852c2bdea6f4aadc12cce9c4d6d0" "b81bfd85aed18e4341dbf4d461ed42d75ec78820a60ce86730fc17fc949389b2" "365d9553de0e0d658af60cff7b8f891ca185a2d7ba3fc6d29aadba69f5194c7f" "6f11ad991da959fa8de046f7f8271b22d3a97ee7b6eca62c81d5a917790a45d9" "611e38c2deae6dcda8c5ac9dd903a356c5de5b62477469133c89b2785eb7a14d" "4182c491b5cc235ba5f27d3c1804fc9f11f51bf56fb6d961f94788be034179ad" "8aebf25556399b58091e533e455dd50a6a9cba958cc4ebb0aab175863c25b9a4" "d677ef584c6dfc0697901a44b885cc18e206f05114c8a3b7fde674fce6180879" default))
  '(display-time-mode t)
  '(inhibit-startup-screen t)
  '(jdee-db-active-breakpoint-face-colors (cons "#0d0f11" "#7FC1CA"))
  '(jdee-db-requested-breakpoint-face-colors (cons "#0d0f11" "#A8CE93"))
  '(jdee-db-spec-breakpoint-face-colors (cons "#0d0f11" "#899BA6"))
- '(linum-format (quote dynamic))
+ '(linum-format 'dynamic)
+ '(lsp-ui-doc-include-signature t)
+ '(lsp-ui-doc-use-childframe t)
+ '(lsp-ui-sideline-enable nil)
  '(menu-bar-mode nil)
  '(nlinum-format " %d")
  '(org-fontify-done-headline t)
  '(org-fontify-quote-and-verse-blocks t)
  '(org-fontify-whole-heading-line t)
  '(package-selected-packages
-   (quote
-    (htmlize helm disaster use-package doom-themes telephone-line minimap multi-compile fill-column-indicator column-marker multiple-cursors eshell-prompt-extras nlinum rust-playground company-racer company flycheck-rust flymake-rust racer cargo haskell-mode solarized-theme rust-mode magit go-mode glsl-mode ggtags cider)))
+   '(lsp-rust csharp-mode cmake-mode htmlize helm disaster use-package doom-themes telephone-line minimap multi-compile fill-column-indicator column-marker multiple-cursors eshell-prompt-extras nlinum rust-playground company-racer company flycheck-rust flymake-rust racer cargo haskell-mode solarized-theme rust-mode magit go-mode glsl-mode ggtags cider))
  '(rust-indent-where-clause nil)
  '(scroll-bar-mode nil)
  '(show-paren-mode t)
  '(tool-bar-mode nil)
- '(tramp-syntax (quote default) nil (tramp)))
+ '(tramp-syntax 'default nil (tramp)))
 
 (set-default-font "Anonymous Pro-12")
 (custom-set-faces
@@ -256,4 +284,4 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(line-number ((t (:inherit (shadow default) :background "#073642")))))
+ '(line-number ((t (:inherit (shadow default) :background "#eee8d5")))))
