@@ -21,9 +21,6 @@
                ;; No fringe
                0))
 
-(exec-path-from-shell-copy-env "CLASSPATH")
-(exec-path-from-shell-initialize)
-
 ;; Package configurations:
 
 (use-package antlr
@@ -65,7 +62,7 @@
   (require 'lsp-imenu)
   (add-hook 'lsp-mode-hook 'lsp-ui-mode)
   (add-hook 'lsp-after-open-hook 'lsp-enable-imenu)
-  (setq lsp-rust-rls-command '("rustup" "run" "nightly" "rls")))
+  (setq lsp-rust-rls-command '("rustup" "run" "stable" "rls")))
 
 (use-package lsp-rust
   :ensure t
@@ -208,6 +205,8 @@
   :bind (("M-x" . helm-M-x)
          ("C-x C-f" . helm-find-files)
          ("C-x C-b" . helm-buffers-list)
+         ("C-x b" . helm-buffers-list)
+         ("C-x g" . helm-grep-do-git-grep )
          ([f1] . helm-buffers-list))
   :config
   (helm-mode 1))
@@ -264,21 +263,21 @@
  '(linum-format 'dynamic)
  '(lsp-ui-doc-include-signature t)
  '(lsp-ui-doc-use-childframe t)
- '(lsp-ui-sideline-enable nil)
+ '(lsp-ui-sideline-enable t)
  '(menu-bar-mode nil)
  '(nlinum-format " %d")
  '(org-fontify-done-headline t)
  '(org-fontify-quote-and-verse-blocks t)
  '(org-fontify-whole-heading-line t)
  '(package-selected-packages
-   '(lsp-rust csharp-mode cmake-mode htmlize helm disaster use-package doom-themes telephone-line minimap multi-compile fill-column-indicator column-marker multiple-cursors eshell-prompt-extras nlinum rust-playground company-racer company flycheck-rust flymake-rust racer cargo haskell-mode solarized-theme rust-mode magit go-mode glsl-mode ggtags cider))
+   '(csharp-mode cmake-mode htmlize helm disaster use-package doom-themes telephone-line minimap multi-compile fill-column-indicator column-marker multiple-cursors eshell-prompt-extras nlinum rust-playground company-racer company flycheck-rust flymake-rust racer cargo haskell-mode solarized-theme rust-mode magit go-mode glsl-mode ggtags cider))
  '(rust-indent-where-clause nil)
  '(scroll-bar-mode nil)
  '(show-paren-mode t)
  '(tool-bar-mode nil)
  '(tramp-syntax 'default nil (tramp)))
 
-(set-default-font "Anonymous Pro-12")
+;(set-default-font "Anonymous Pro-12")
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
