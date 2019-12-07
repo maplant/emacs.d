@@ -10,151 +10,89 @@
 
 (require 'bind-key)
 
-(defun line-number-mode ()
-    (if (version< emacs-version "26")
-        (nlinum-mode)
-      (display-line-numbers-mode)))
-
-(fringe-mode (if (version< emacs-version "26")
-                 ;; Left only fringe
-                 '(nil . 0)
-               ;; No fringe
-               0))
-
 ;; Package configurations:
 
 (use-package antlr
   :mode ("\\.g4\\'" . antlr-mode))
 
-(use-package magit
+(use-package asm-mode
+  :hook (asm-mode-hook . custom-prog-mode))
+
+(use-package cargo
   :ensure t)
-
-(use-package solarized-theme
-  :ensure t
-  :config
-  (setq solarized-distinct-fringe-background t
-        solarized-distinct-doc-face t
-        solarized-emphasize-indicators t))
-
-(use-package multi-compile
-  :ensure t
-  :config
-  (setq multi-compile-alist
-        '((c-mode . (("build" . "make -k")
-                     ("clean" . "make clean all")))
-          (c++-mode . (("build" . "make -k")
-                       ("clean" . "make clean all")))
-          (go-mode . (("build" . "go build")
-                      ("run" . "go run")))
-          (rust-mode . (("build" . "cargo build --color always")
-                        ("debug" . "cargo run --color always")
-                        ("release" . "cargo run --release --color always")
-                        ("bench" . "cargo bench --color always")
-                        ("test" . "cargo test --color always"))))))
-
-(use-package lsp-ui
-  :ensure t)
-
-(use-package lsp-mode
-  :ensure t
-  :after (lsp-ui)
-  :config
-  (require 'lsp-imenu)
-  (add-hook 'lsp-mode-hook 'lsp-ui-mode)
-  (add-hook 'lsp-after-open-hook 'lsp-enable-imenu)
-  (setq lsp-rust-rls-command '("rustup" "run" "stable" "rls")))
-
-(use-package lsp-rust
-  :ensure t
-  :after (lsp-mode))
-
-(setq-default c-default-style "k&r"
-              c-basic-offset 4
-              tab-width 2
-              indent-tabs-mode nil)
-
-(use-package racer
-  :ensure t
-  :config
-  (setq racer-rust-src-path "/Users/map/.rustup/toolchains/nightly-x86_64-apple-darwin/lib/rustlib/src/rust/src")
-  (add-hook 'racer-mode-hook #'eldoc-mode))
-
-(use-package rust-mode
-  :ensure t
-  :mode ("\\.rs\\'" . rust-mode)
-  :bind (:map rust-mode-map
-	            ("C-c C-r" . multi-compile-run))
-  :after (lsp-rust)
-  :config
-  ;; Electric indent for list closing delimeters
-  (define-key rust-mode-map	(kbd "}")
-    (lambda () (interactive) (insert "}") (rust-mode-indent-line)))
-  (define-key rust-mode-map	(kbd ")")
-    (lambda () (interactive) (insert ")") (rust-mode-indent-line)))
-  (define-key rust-mode-map	(kbd "]")
-	  (lambda () (interactive) (insert "]") (rust-mode-indent-line)))
-  ;; Custom hook for rust mode.
-  (add-hook 'rust-mode-hook
-			(lambda ()
-			  (subword-mode 1)
-			  (set-fill-column 80)))
-  (add-hook 'rust-mode-hook #'line-number-mode)
-  (add-hook 'rust-mode-hook #'flyspell-prog-mode)
-  (add-hook 'rust-mode-hook #'flycheck-mode)
-  (add-hook 'rust-mode-hook #'lsp-rust-enable))
-
-(use-package auto-revert-mode
-  :mode ("\\.log\\'" . auto-revert-mode))  
-
-(use-package ggtags
-  :ensure t)
-
-(defun metal-mode-hook ()
-  (setq tab-width 2)
-  (line-number-mode)
-  (subword-mode 1)
-  (ggtags-mode)
-  (flyspell-prog-mode)
-  (set-fill-column 80))
 
 (use-package cc-mode
   :bind (:map c-mode-map
               ("C-c C-r" . multi-compile-run)
               ("C-c C-d" . disaster)
               ("[mouse-3]" . ggtags-find-tag-mouse))
+  :hook (cc-mode . custom-prog-mode)
   :config
   (c-set-offset 'innamespace 0)
-  (c-set-offset 'inextern-lang 0)
-  (add-hook 'c-mode-common-hook 'metal-mode-hook)
-  (add-hook 'c++-mode-common-hook 'metal-mode-hook))
+  (c-set-offset 'inextern-lang 0))
 
 (use-package css-mode
-  :config
-  (add-hook 'css-mode-hook #'line-number-mode))
+  :hook (css-mode-hook . display-line-numbers-mode))
 
-(use-package asm-mode
+(use-package exec-path-from-shell
+  :ensure t
   :config
-  (add-hook 'asm-mode-hook
-            (lambda ()
-              (ggtags-mode)
-              (flyspell-prog-mode)
-              (line-number-mode))))
+  (exec-path-from-shell-initialize))
 
-(use-package tex-mode
+(use-package fill-column-indicator
+  :ensure t
+  :hook ((asm-mode cc-mode go-mode python-mode rust-mode) . fci-mode))
+
+(use-package flyspell-mode
+  :hook (org-mode))
+
+(use-package go-mode
+  :bind (:map go-mode-map
+              ("C-c C-r" . multi-compile-run))
+  :hook (go-mode . custom-prog-mode))
+
+(use-package helm
+  :ensure t
+  :bind (("M-x" . helm-M-x)
+         ("C-x C-f" . helm-find-files)
+         ("C-x C-b" . helm-buffers-list)
+         ("C-x b" . helm-buffers-list)
+         ("M-s g" . helm-grep-do-git-grep)
+         ([f1] . helm-buffers-list)
+         (:map helm-map
+               ("<left>" . helm-previous-source)
+               ("<right>" . helm-next-source)))
+  :custom
+  (helm-ff-lynx-style-map t)
   :config
-  (add-hook 'tex-mode-hook
-	        (lambda ()
-	          (flyspell-mode)
-	          (line-number-mode))))
+  (helm-mode 1))
 
-(defun publish-latex-file (_plist filename pub-dir)
-  (call-process "pdflatex" nil nil nil filename))
+(use-package lsp-ui
+  :ensure t)
+
+(use-package lsp-mode
+  :ensure t
+  :after yasnippet
+  :hook (rust-mode . lsp))
+
+(use-package magit
+  :ensure t)
+
+(use-package multi-compile
+  :ensure t
+  :custom
+  (multi-compile-alist
+   '((c-mode . (("build" . "make -k")
+                ("clean" . "make clean all")))
+     (c++-mode . (("build" . "make -k")
+                  ("clean" . "make clean all")))
+     (go-mode . (("build" . "go build")
+                 ("run" . "go run"))))))
 
 (use-package org
   :bind (:map org-mode-map
               ("C-c C-r" . org-publish-project))
   :config
-  (add-hook 'org-mode-hook #'flyspell-mode)
   (require 'ox-publish)
   (setq org-publish-project-alist
         '(
@@ -186,32 +124,43 @@
 (use-package python
   :mode ("\\.py\\'" . python-mode)
   :interpreter "python"
-  :config
-  (add-hook 'python-mode-hook
-            (lambda ()
-              (line-number-mode))))
+  :hook (python-mode . custom-prog-mode))
 
-(use-package go-mode
-  :bind (:map go-mode-map
-              ("C-c C-r" . multi-compile-run))
-  :config
-  (add-hook 'go-mode-hook
-            (lambda ()
-              (line-number-mode)
-              (subword-mode 1)
-              (set-fill-column 80)
-              (fci-mode))))
-
-(use-package helm
+(use-package rust-mode
   :ensure t
-  :bind (("M-x" . helm-M-x)
-         ("C-x C-f" . helm-find-files)
-         ("C-x C-b" . helm-buffers-list)
-         ("C-x b" . helm-buffers-list)
-         ("M-s g" . helm-grep-do-git-grep )
-         ([f1] . helm-buffers-list))
+  :mode ("\\.rs\\'" . rust-mode)
+  :bind (:map rust-mode-map
+	            ("C-c C-r" . multi-compile-rust-run))
+  :hook (rust-mode . custom-prog-mode)
+  :after lsp-mode)
+
+(use-package solarized-theme
+  :ensure t
+  :custom
+  (solarized-distinct-fringe-background t "Make the fringe color dark.")
+  (solarized-distinct-doc-face t "Make doc comments purple.")
+  (solarized-emphasize-indicators t))
+
+(use-package yasnippet
+  :ensure t)
+
+(setq-default c-default-style "k&r"
+              c-basic-offset 2
+              tab-width 2
+              indent-tabs-mode nil)
+
+(use-package ggtags
+  :ensure t)
+
+(use-package tex-mode
   :config
-  (helm-mode 1))
+  (add-hook 'tex-mode-hook
+	        (lambda ()
+	          (flyspell-mode)
+	          (display-line-numbers-mode))))
+
+(defun publish-latex-file (_plist filename pub-dir)
+  (call-process "pdflatex" nil nil nil filename))
 
 (use-package multiple-cursors
   :ensure t
@@ -224,7 +173,19 @@
          ("M-<left>" . windmove-left)
          ("M-<right>" . windmove-right)))
 
-(add-hook 'emacs-lisp-mode-hook (lambda () (line-number-mode)))
+(defun custom-prog-mode ()
+  (display-line-numbers-mode)
+  (flyspell-prog-mode)
+  (set-fill-column 80)
+  (subword-mode 1))
+
+(defun multi-compile-rust-run ()
+  (interactive)
+  (funcall
+   (helm-comp-read "Build mode: " '( ("build" . cargo-process-build)
+                                    ("test" . cargo-process-test)))))
+
+(add-hook 'emacs-lisp-mode-hook (lambda () (display-line-numbers-mode)))
 
 (add-hook 'eshell-preoutput-filter-functions 'ansi-color-apply)
 
@@ -244,50 +205,47 @@
                             (insert-char 9 1)
                             (untabify (- (point) 1) (point)))))
 
-;; Emacs internal configuration:
-
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careul.
+ ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(ansi-color-faces-vector
-   [default default default italic underline success warning error])
- '(c-basic-offset 4 t)
- '(column-number-mode t)
- '(custom-enabled-themes (quote (solarized-light)))
+ '(custom-enabled-themes (quote (solarized-dark)))
  '(custom-safe-themes
    (quote
-    ("5900bec889f57284356b8216a68580bfa6ece73a6767dfd60196e56d050619bc" "a8245b7cc985a0610d71f9852e9f2767ad1b852c2bdea6f4aadc12cce9c4d6d0" "b81bfd85aed18e4341dbf4d461ed42d75ec78820a60ce86730fc17fc949389b2" "365d9553de0e0d658af60cff7b8f891ca185a2d7ba3fc6d29aadba69f5194c7f" "6f11ad991da959fa8de046f7f8271b22d3a97ee7b6eca62c81d5a917790a45d9" "611e38c2deae6dcda8c5ac9dd903a356c5de5b62477469133c89b2785eb7a14d" "4182c491b5cc235ba5f27d3c1804fc9f11f51bf56fb6d961f94788be034179ad" "8aebf25556399b58091e533e455dd50a6a9cba958cc4ebb0aab175863c25b9a4" "d677ef584c6dfc0697901a44b885cc18e206f05114c8a3b7fde674fce6180879" default)))
- '(display-time-mode t)
+    ("0598c6a29e13e7112cfbc2f523e31927ab7dce56ebb2016b567e1eff6dc1fd4f" "2809bcb77ad21312897b541134981282dc455ccd7c14d74cc333b6e549b824f3" "c433c87bd4b64b8ba9890e8ed64597ea0f8eb0396f4c9a9e01bd20a04d15d358" default)))
+ '(helm-ff-lynx-style-map t t nil "Customized with use-package helm")
  '(inhibit-startup-screen t)
- '(jdee-db-active-breakpoint-face-colors (cons "#0d0f11" "#7FC1CA"))
- '(jdee-db-requested-breakpoint-face-colors (cons "#0d0f11" "#A8CE93"))
- '(jdee-db-spec-breakpoint-face-colors (cons "#0d0f11" "#899BA6"))
- '(linum-format (quote dynamic))
- '(lsp-ui-doc-include-signature t)
- '(lsp-ui-doc-use-childframe t)
- '(lsp-ui-sideline-enable t)
  '(menu-bar-mode nil)
- '(nlinum-format " %d")
- '(org-fontify-done-headline t)
- '(org-fontify-quote-and-verse-blocks t)
- '(org-fontify-whole-heading-line t)
+ '(multi-compile-alist
+   (quote
+    ((c-mode
+      ("build" . "make -k")
+      ("clean" . "make clean all"))
+     (c++-mode
+      ("build" . "make -k")
+      ("clean" . "make clean all"))
+     (go-mode
+      ("build" . "go build")
+      ("run" . "go run"))
+     (rust-mode
+      ("build" . "cargo build --color always")
+      ("debug" . "cargo run --color always")
+      ("release" . "cargo run --release --color always")
+      ("bench" . "cargo bench --color always")
+      ("test" . "cargo test --color always")))) nil nil "Customized with use-package multi-compile")
  '(package-selected-packages
    (quote
-    (yaml-mode docker-tramp mvn lsp-rust csharp-mode cmake-mode htmlize helm disaster use-package doom-themes telephone-line minimap multi-compile fill-column-indicator column-marker multiple-cursors eshell-prompt-extras nlinum rust-playground company-racer company flycheck-rust flymake-rust racer cargo haskell-mode solarized-theme rust-mode magit go-mode glsl-mode ggtags cider)))
- '(ring-bell-function (quote ignore))
- '(rust-indent-where-clause nil)
+    (cargo multiple-cursors ggtags yasnippet solarized-theme rust-mode multi-compile magit lsp-mode lsp-ui helm use-package gnu-elpa-keyring-update)))
  '(scroll-bar-mode nil)
  '(show-paren-mode t)
- '(tool-bar-mode nil)
- '(tramp-syntax (quote default) nil (tramp))
- '(visible-bell nil))
-
-;(set-default-font "Anonymous Pro-12")
+ '(solarized-distinct-doc-face t nil nil "Make doc comments purple.")
+ '(solarized-distinct-fringe-background t nil nil "Make the fringe color dark.")
+ '(solarized-emphasize-indicators t nil nil "Customized with use-package solarized-theme")
+ '(tool-bar-mode nil))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(line-number ((t (:inherit (shadow default) :background "#eee8d5")))))
+ )
