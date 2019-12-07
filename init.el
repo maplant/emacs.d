@@ -18,6 +18,9 @@
 (use-package asm-mode
   :hook (asm-mode-hook . custom-prog-mode))
 
+(use-package cargo
+  :ensure t)
+
 (use-package cc-mode
   :bind (:map c-mode-map
               ("C-c C-r" . multi-compile-run)
@@ -30,6 +33,15 @@
 
 (use-package css-mode
   :hook (css-mode-hook . display-line-numbers-mode))
+
+(use-package exec-path-from-shell
+  :ensure t
+  :config
+  (exec-path-from-shell-initialize))
+
+(use-package fill-column-indicator
+  :ensure t
+  :hook ((asm-mode cc-mode go-mode python-mode rust-mode) . fci-mode))
 
 (use-package flyspell-mode
   :hook (org-mode))
@@ -75,12 +87,7 @@
      (c++-mode . (("build" . "make -k")
                   ("clean" . "make clean all")))
      (go-mode . (("build" . "go build")
-                 ("run" . "go run")))
-     (rust-mode . (("build" . "cargo build --color always")
-                   ("debug" . "cargo run --color always")
-                   ("release" . "cargo run --release --color always")
-                   ("bench" . "cargo bench --color always")
-                   ("test" . "cargo test --color always"))))))
+                 ("run" . "go run"))))))
 
 (use-package org
   :bind (:map org-mode-map
@@ -123,7 +130,7 @@
   :ensure t
   :mode ("\\.rs\\'" . rust-mode)
   :bind (:map rust-mode-map
-	            ("C-c C-r" . multi-compile-run))
+	            ("C-c C-r" . multi-compile-rust-run))
   :hook (rust-mode . custom-prog-mode)
   :after lsp-mode)
 
@@ -141,9 +148,6 @@
               c-basic-offset 2
               tab-width 2
               indent-tabs-mode nil)
-
-;(use-package helm-company
-;  :ensure t)
 
 (use-package ggtags
   :ensure t)
@@ -171,10 +175,15 @@
 
 (defun custom-prog-mode ()
   (display-line-numbers-mode)
-  (fci-mode)
   (flyspell-prog-mode)
   (set-fill-column 80)
   (subword-mode 1))
+
+(defun multi-compile-rust-run ()
+  (interactive)
+  (funcall
+   (helm-comp-read "Build mode: " '( ("build" . cargo-process-build)
+                                    ("test" . cargo-process-test)))))
 
 (add-hook 'emacs-lisp-mode-hook (lambda () (display-line-numbers-mode)))
 
@@ -195,3 +204,48 @@
                             (interactive)
                             (insert-char 9 1)
                             (untabify (- (point) 1) (point)))))
+
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(custom-enabled-themes (quote (solarized-dark)))
+ '(custom-safe-themes
+   (quote
+    ("2809bcb77ad21312897b541134981282dc455ccd7c14d74cc333b6e549b824f3" "c433c87bd4b64b8ba9890e8ed64597ea0f8eb0396f4c9a9e01bd20a04d15d358" default)))
+ '(helm-ff-lynx-style-map t nil nil "Customized with use-package helm")
+ '(inhibit-startup-screen t)
+ '(menu-bar-mode nil)
+ '(multi-compile-alist
+   (quote
+    ((c-mode
+      ("build" . "make -k")
+      ("clean" . "make clean all"))
+     (c++-mode
+      ("build" . "make -k")
+      ("clean" . "make clean all"))
+     (go-mode
+      ("build" . "go build")
+      ("run" . "go run"))
+     (rust-mode
+      ("build" . "cargo build --color always")
+      ("debug" . "cargo run --color always")
+      ("release" . "cargo run --release --color always")
+      ("bench" . "cargo bench --color always")
+      ("test" . "cargo test --color always")))) nil nil "Customized with use-package multi-compile")
+ '(package-selected-packages
+   (quote
+    (cargo multiple-cursors ggtags yasnippet solarized-theme rust-mode multi-compile magit lsp-mode lsp-ui helm use-package gnu-elpa-keyring-update)))
+ '(scroll-bar-mode nil)
+ '(show-paren-mode t)
+ '(solarized-distinct-doc-face t nil nil "Make doc comments purple.")
+ '(solarized-distinct-fringe-background t nil nil "Make the fringe color dark.")
+ '(solarized-emphasize-indicators t nil nil "Customized with use-package solarized-theme")
+ '(tool-bar-mode nil))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
