@@ -41,7 +41,7 @@
 
 (use-package fill-column-indicator
   :ensure t
-  :hook ((asm-mode cc-mode go-mode python-mode rust-mode) . fci-mode))
+  :hook ((asm-mode cc-mode go-mode python-mode) . fci-mode))
 
 (use-package flyspell-mode
   :hook (org-mode))
@@ -105,6 +105,7 @@
            :headline-levels 4
            :auto-preamble t
            :auto-sitemap t
+           :html-wrap-src-lines t
            :sitemap-filename "sitemap.org"
            :sitemap-titile "Sitemap")
           ("org-latex"
@@ -214,7 +215,7 @@
  '(custom-safe-themes
    (quote
     ("0598c6a29e13e7112cfbc2f523e31927ab7dce56ebb2016b567e1eff6dc1fd4f" "2809bcb77ad21312897b541134981282dc455ccd7c14d74cc333b6e549b824f3" "c433c87bd4b64b8ba9890e8ed64597ea0f8eb0396f4c9a9e01bd20a04d15d358" default)))
- '(helm-ff-lynx-style-map t t nil "Customized with use-package helm")
+ '(helm-ff-lynx-style-map t nil nil "Customized with use-package helm")
  '(inhibit-startup-screen t)
  '(menu-bar-mode nil)
  '(multi-compile-alist
@@ -236,7 +237,7 @@
       ("test" . "cargo test --color always")))) nil nil "Customized with use-package multi-compile")
  '(package-selected-packages
    (quote
-    (cargo multiple-cursors ggtags yasnippet solarized-theme rust-mode multi-compile magit lsp-mode lsp-ui helm use-package gnu-elpa-keyring-update)))
+    (yaml-mode cargo multiple-cursors ggtags yasnippet solarized-theme rust-mode multi-compile magit lsp-mode lsp-ui helm use-package gnu-elpa-keyring-update)))
  '(scroll-bar-mode nil)
  '(show-paren-mode t)
  '(solarized-distinct-doc-face t nil nil "Make doc comments purple.")
