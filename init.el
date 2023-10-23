@@ -6,12 +6,13 @@
 	     '("melpa" . "https://melpa.org/packages/"))
 (package-initialize)
 
+;; Package configurations:
+
 (use-package company
   :ensure
   :custom
   (company-idle-delay 0.5) ;; how long to wait until popup
-  :bind
-  (:map company-active-map
+  :bind (:map company-active-map
 	      ("C-n". company-select-next)
 	      ("C-p". company-select-previous)
 	      ("M-<". company-select-first)
@@ -67,19 +68,10 @@
 ;; (use-package rust-ts-mode
 ;;   :bind (:map rust-ts-mode-map
 ;; 	      ("C-c C-r" . multi-compile-rust-run)
-;;               ("C-c C-f" . rust-format-buffer))
+;;            ("C-c C-f" . rust-format-buffer))
 ;;   :config 
 ;;   (add-hook 'rust-ts-mode-hook 'eglot-ensure)
 ;;   (add-hook 'rust-ts-mode-hook 'company-mode))
-
-;; This wont enable solarized, but I prefer it like this: 
-
-(use-package solarized-theme
-  :ensure t
-  :custom
-  (solarized-distinct-fringe-background t "Make the fringe color dark.")
-  (solarized-distinct-doc-face t "Make doc comments purple.")
-  (solarized-emphasize-indicators t))
 
 ;; Automatically prompt and install for tree sitter modes:
 
@@ -128,12 +120,31 @@
 ;;     :innermodes '(poly-sql-expr-rust-innermode)))
 
 (defun multi-compile-rust-run ()
+  "Give a list of options for building or running a Rust project"
   (interactive)
   (funcall
-   (helm-comp-read "Build mode: " '( ("build" . rustic-cargo-build)
-                                     ("test" . rustic-cargo-run-nextest)
-                                     ("run" . rustic-cargo-run)
-                                     ("clippy" . rustic-cargo-clippy)))))
+   (helm-comp-read "Build mode: " '(("build" . rustic-cargo-build)
+                                    ("test" . rustic-cargo-run-nextest)
+                                    ("run" . rustic-cargo-run)
+                                    ("clippy" . rustic-cargo-clippy)))))
+
+(use-package solarized-theme
+  :ensure t
+  :after (dbus)
+  :custom
+  (solarized-distinct-fringe-background t "Make the fringe color dark.")
+  (solarized-distinct-doc-face t "Make doc comments purple.")
+  (solarized-emphasize-indicators t))
+
+(use-package auto-dark
+  :ensure t
+  :custom
+  (auto-dark-dark-theme 'solarized-dark)
+  (auto-dark-light-theme 'solarized-light)
+  :config
+  (auto-dark-mode t))
+
+;; Prog mode hooks: 
 
 (add-hook 'prog-mode-hook 'display-line-numbers-mode)
 (add-hook 'prog-mode-hook 'company-mode)
@@ -149,33 +160,11 @@
                             (insert-char 9 1)
                             (untabify (- (point) 1) (point)))))
 
-;; The following is just for setting the proper window boundary in Gnome.
-;; Comment in if you want that, I guess.
+;; Custom variables:
 
-(defun set-emacs-frames (variant)
-  (dolist (frame (frame-list))
-    (let* ((window-id (frame-parameter frame 'outer-window-id))
-	   (id (string-to-number window-id))
-	   (cmd (format "xprop -id 0x%x -f _GTK_THEME_VARIANT 8u -set _GTK_THEME_VARIANT \"%s\""
-			id variant)))
-      (call-process-shell-command cmd))))
-
-(defun set-emacs-theme-light ()
-  (interactive)
-  (load-theme 'solarized-light t)
-  (set-emacs-frames "light"))
-
-(defun set-emacs-theme-dark ()
-  (interactive)
-  (load-theme 'solarized-dark t)
-  (set-emacs-frames "dark"))
-
-(if (window-system)
-    (set-emacs-theme-dark))
-
-;; Custom variables
 (menu-bar-mode -1)
 (tool-bar-mode -1)
 (scroll-bar-mode -1)
-(setq inhibit-startup-screen -1)
+(setq inhibit-startup-screen -1
+      custom-file (concat user-emacs-directory "/custom.el"))
 (set-frame-font "Anonymous Pro 10" nil t)
