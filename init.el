@@ -2,6 +2,12 @@
 (require 'bind-key)
 (require 'use-package)
 
+(add-to-list 'load-path "~/.emacs.d/theme")
+(add-to-list 'load-path "~/.emacs.d/typst-ts-mode")
+
+(require 'custom-solarized)
+(require 'typst-ts-mode)
+
 (add-to-list 'package-archives
 	     '("melpa" . "https://melpa.org/packages/"))
 (package-initialize)
@@ -11,7 +17,7 @@
 (use-package company
   :ensure
   :custom
-  (company-idle-delay 0.5) ;; how long to wait until popup
+  (company-idle-delay 0.25) ;; how long to wait until popup
   :bind (:map company-active-map
 	      ("C-n". company-select-next)
 	      ("C-p". company-select-previous)
@@ -32,7 +38,7 @@
          ("C-x C-f" . helm-find-files)
          ("C-x C-b" . helm-buffers-list)
          ("C-x b" . helm-buffers-list)
-         ("M-s g" . helm-grep-do-git-grep)
+         ("M-s g" . helm-grep-repo)
          ([f1] . helm-buffers-list)
          (:map helm-map
                ("<left>" . helm-previous-source)
@@ -42,6 +48,11 @@
   :config
   (helm-mode 1))
 
+(defun helm-grep-repo ()
+  "Grep the whole directory"
+  (interactive)
+  (helm-grep-do-git-grep '(4)))
+  
 (use-package magit
   :ensure t)
 
@@ -51,27 +62,41 @@
 (use-package rust-mode
   :ensure t)
 
+;; (use-package rustic
+;;   :ensure t)
+
 (use-package rustic
   :ensure t
   :bind (:map rust-mode-map
 	      ("C-c C-r" . multi-compile-rust-run)
               ("C-c C-f" . rust-format-buffer))
+  :config
+  (custom-set-faces
+   '(rustic-compilation-column ((t (:inherit compilation-column-number))))
+   '(rustic-compilation-line ((t (:inherit compilation-line-number))))
+   '(rustic-message ((t (:inherit compilation-message-face))))
+   '(rustic-compilation-error ((t (:inherit compilation-error))))
+   '(rustic-compilation-warning ((t (:inherit compilation-warning))))
+   '(rustic-compilation-info ((t (:inherit compilation-info)))))
   :custom
-  ;; eglot as of now is a little slower to start up than lsp-mode, but
-  ;; it's built in so we prefer that.
   (rustic-lsp-client 'eglot))
 
-;; If you don't mind that as of right now Rust tree sitter does not
-;; highlight doc comments, comment out rustic (and make sure it's uninstalled)
-;; and bring back in the following section:
-
 ;; (use-package rust-ts-mode
+;;   :ensure t
+;;   :mode ("\.rs$" . rust-ts-mode)
 ;;   :bind (:map rust-ts-mode-map
-;; 	      ("C-c C-r" . multi-compile-rust-run)
-;;            ("C-c C-f" . rust-format-buffer))
+;;  	      ("C-c C-r" . multi-compile-rust-run)
+;;               ("C-c C-f" . rust-format-buffer))
 ;;   :config 
 ;;   (add-hook 'rust-ts-mode-hook 'eglot-ensure)
 ;;   (add-hook 'rust-ts-mode-hook 'company-mode))
+
+;; (use-package cargo-mode
+;;   :hook
+;;   (rust-ts-mode . cargo-minor-mode)
+;;   :after (rust-ts-mode)
+;;   :config
+;;   (setq compilation-scroll-output t))
 
 ;; Automatically prompt and install for tree sitter modes:
 
@@ -97,6 +122,10 @@
          ("M-<left>" . windmove-left)
          ("M-<right>" . windmove-right)))
 
+(use-package protobuf-ts-mode
+  :ensure t
+  :mode ("\.proto$" . protobuf-ts-mode))
+
 ;; This, in theory, should enable poly mode for Rust, where anything within
 ;; a r#" string will be highlighted with SQL mode. In practice, I found it
 ;; too slow and buggy. 
@@ -106,18 +135,16 @@
 ;;   :mode ("\.rs$" . poly-rust-sql-mode)
 ;;   :config
 ;;   (setq polymode-prefix-key (kbd "C-c n"))
-;;   (define-hostmode poly-rust-hostmode :mode 'rust-mode)
-
+;;   (define-hostmode poly-rust-hostmode :mode 'rustic-mode)
 ;;   (define-innermode poly-sql-expr-rust-innermode
-;;     :mode 'sql-mode
-;;     :head-matcher (rx "r#\"")
-;;     :tail-matcher (rx "\"#")
-;;     :head-mode 'host
-;;     :tail-mode 'host)
-
+;; 		    :mode 'sql-mode
+;; 		    :head-matcher (rx "r#\"")
+;; 		    :tail-matcher (rx "\"#")
+;; 		    :head-mode 'host
+;; 		    :tail-mode 'host)
 ;;   (define-polymode poly-rust-sql-mode
-;;     :hostmode 'poly-rust-hostmode
-;;     :innermodes '(poly-sql-expr-rust-innermode)))
+;; 		   :hostmode 'poly-rust-hostmode
+;; 		   :innermodes '(poly-sql-expr-rust-innermode)))
 
 (defun multi-compile-rust-run ()
   "Give a list of options for building or running a Rust project"
@@ -139,10 +166,16 @@
 (use-package auto-dark
   :ensure t
   :custom
-  (auto-dark-dark-theme 'solarized-dark)
-  (auto-dark-light-theme 'solarized-light)
+  (auto-dark-dark-theme 'custom-solarized-dark)
+  (auto-dark-light-theme 'custom-solarized-light)
   :config
   (auto-dark-mode t))
+
+(use-package vterm
+  :ensure t)
+
+(use-package string-inflection
+  :bind (("C-c i" . string-inflection-cycle))) 
 
 ;; Prog mode hooks: 
 
@@ -167,4 +200,5 @@
 (scroll-bar-mode -1)
 (setq inhibit-startup-screen -1
       custom-file (concat user-emacs-directory "/custom.el"))
+(setq-default indent-tabs-mode nil)
 (set-frame-font "Anonymous Pro 10" nil t)
