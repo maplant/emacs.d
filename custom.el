@@ -3,16 +3,12 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(package-selected-packages
-   '(nushell-ts-mode vterm treesit-auto solarized-theme rustic protobuf-ts-mode popup polymode multiple-cursors magit lua-mode helm-git-grep helm haskell-mode glsl-mode doom-themes company color-theme-sanityinc-solarized cargo-mode auto-dark)))
+ '(custom-safe-themes
+   '("d89e15a34261019eec9072575d8a924185c27d3da64899905f8548cbd9491a36"
+     default)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(rustic-compilation-column ((t (:inherit compilation-column-number))))
- '(rustic-compilation-error ((t (:inherit compilation-error))))
- '(rustic-compilation-info ((t (:inherit compilation-info))))
- '(rustic-compilation-line ((t (:inherit compilation-line-number))))
- '(rustic-compilation-warning ((t (:inherit compilation-warning))))
- '(rustic-message ((t (:inherit compilation-message-face)))))
+ '(default ((((class color) (min-colors 89)) (:foreground "#b9b9b9" :background "#181818")))))

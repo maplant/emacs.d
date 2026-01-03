@@ -2,14 +2,8 @@
 (require 'bind-key)
 (require 'use-package)
 
-(add-to-list 'load-path "~/.emacs.d/theme")
-(add-to-list 'load-path "~/.emacs.d/typst-ts-mode")
-
-(require 'custom-solarized)
-(require 'typst-ts-mode)
-
 (add-to-list 'package-archives
-	     '("melpa" . "https://melpa.org/packages/"))
+             '("melpa" . "https://melpa.org/packages/"))
 (package-initialize)
 
 ;; Package configurations:
@@ -19,10 +13,10 @@
   :custom
   (company-idle-delay 0.25) ;; how long to wait until popup
   :bind (:map company-active-map
-	      ("C-n". company-select-next)
-	      ("C-p". company-select-previous)
-	      ("M-<". company-select-first)
-	      ("M->". company-select-last)))
+              ("C-n". company-select-next)
+              ("C-p". company-select-previous)
+              ("M-<". company-select-first)
+              ("M->". company-select-last)))
 
 ;; Remove the following section if you want inline types in rust
 (use-package eglot
@@ -62,13 +56,10 @@
 (use-package rust-mode
   :ensure t)
 
-;; (use-package rustic
-;;   :ensure t)
-
 (use-package rustic
   :ensure t
   :bind (:map rust-mode-map
-	      ("C-c C-r" . multi-compile-rust-run)
+              ("C-c C-r" . multi-compile-rust-run)
               ("C-c C-f" . rust-format-buffer))
   :config
   (custom-set-faces
@@ -79,26 +70,9 @@
    '(rustic-compilation-warning ((t (:inherit compilation-warning))))
    '(rustic-compilation-info ((t (:inherit compilation-info)))))
   :custom
-  (rustic-lsp-client 'eglot))
+  (compilation-scroll-output 'first-error)
+(rustic-lsp-client 'eglot))
 
-;; (use-package rust-ts-mode
-;;   :ensure t
-;;   :mode ("\.rs$" . rust-ts-mode)
-;;   :bind (:map rust-ts-mode-map
-;;  	      ("C-c C-r" . multi-compile-rust-run)
-;;               ("C-c C-f" . rust-format-buffer))
-;;   :config 
-;;   (add-hook 'rust-ts-mode-hook 'eglot-ensure)
-;;   (add-hook 'rust-ts-mode-hook 'company-mode))
-
-;; (use-package cargo-mode
-;;   :hook
-;;   (rust-ts-mode . cargo-minor-mode)
-;;   :after (rust-ts-mode)
-;;   :config
-;;   (setq compilation-scroll-output t))
-
-;; Automatically prompt and install for tree sitter modes:
 
 (use-package treesit-auto
   :ensure t
@@ -126,50 +100,35 @@
   :ensure t
   :mode ("\.proto$" . protobuf-ts-mode))
 
-;; This, in theory, should enable poly mode for Rust, where anything within
-;; a r#" string will be highlighted with SQL mode. In practice, I found it
-;; too slow and buggy. 
-
-;; (use-package polymode
-;;   :ensure t
-;;   :mode ("\.rs$" . poly-rust-sql-mode)
-;;   :config
-;;   (setq polymode-prefix-key (kbd "C-c n"))
-;;   (define-hostmode poly-rust-hostmode :mode 'rustic-mode)
-;;   (define-innermode poly-sql-expr-rust-innermode
-;; 		    :mode 'sql-mode
-;; 		    :head-matcher (rx "r#\"")
-;; 		    :tail-matcher (rx "\"#")
-;; 		    :head-mode 'host
-;; 		    :tail-mode 'host)
-;;   (define-polymode poly-rust-sql-mode
-;; 		   :hostmode 'poly-rust-hostmode
-;; 		   :innermodes '(poly-sql-expr-rust-innermode)))
-
 (defun multi-compile-rust-run ()
   "Give a list of options for building or running a Rust project"
   (interactive)
   (funcall
    (helm-comp-read "Build mode: " '(("build" . rustic-cargo-build)
-                                    ("test" . rustic-cargo-run-nextest)
+                                    ("test" . rustic-cargo-test)
                                     ("run" . rustic-cargo-run)
+                                    ("bench" . rustic-cargo-bench)
+                                    ("doc" . rustic-cargo-doc)
                                     ("clippy" . rustic-cargo-clippy)))))
 
 (use-package solarized-theme
   :ensure t
-  :after (dbus)
   :custom
   (solarized-distinct-fringe-background t "Make the fringe color dark.")
   (solarized-distinct-doc-face t "Make doc comments purple.")
-  (solarized-emphasize-indicators t))
-
-(use-package auto-dark
-  :ensure t
-  :custom
-  (auto-dark-dark-theme 'custom-solarized-dark)
-  (auto-dark-light-theme 'custom-solarized-light)
+  (solarized-emphasize-indicators t)
   :config
-  (auto-dark-mode t))
+  (load-theme 'solarized-selenized-white t))
+
+;;(use-package auto-dark
+;;  :ensure t
+;;  :custom
+;;  (auto-dark-themes '((solarized-selenized-black t) (solarized-selenized-light t)))
+;;  :config
+;;  (auto-dark-mode t))
+
+(use-package parinfer-rust-mode
+  :hook (scheme-mode . parinfer-rust-mode))
 
 (use-package vterm
   :ensure t)
@@ -198,7 +157,12 @@
 (menu-bar-mode -1)
 (tool-bar-mode -1)
 (scroll-bar-mode -1)
+; (add-to-list 'default-frame-alist '(alpha-background . 100))
 (setq inhibit-startup-screen -1
-      custom-file (concat user-emacs-directory "/custom.el"))
+      column-number-mode t
+      custom-file (concat user-emacs-directory "/custom.el")
+      initial-frame-alist (append initial-frame-alist
+                                  '((width . 0.5))))
+
 (setq-default indent-tabs-mode nil)
-(set-frame-font "Anonymous Pro 10" nil t)
+(set-frame-font "Anonymous Pro-12" nil t)
