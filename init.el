@@ -1,168 +1,174 @@
+;;; init.el --- -*- lexical-binding: t -*-
+
 (require 'package)
+(setq package-archives '(("gnu" . "https://elpa.gnu.org/packages/")
+                         ("melpa" . "https://melpa.org/packages/")))
+(package-initialize)
+
 (require 'bind-key)
 (require 'use-package)
+(setq use-package-always-ensure t)
 
-(add-to-list 'package-archives
-             '("melpa" . "https://melpa.org/packages/"))
-(package-initialize)
+;; UI / behavior:
+
+(menu-bar-mode -1)
+(tool-bar-mode -1)
+(scroll-bar-mode -1)
+
+(setq inhibit-startup-screen t
+      column-number-mode t
+      custom-file (make-temp-file "emacs-custom-")
+      custom-safe-themes t
+      initial-frame-alist (append initial-frame-alist
+                                  '((width . 0.5))))
+
+(setq-default indent-tabs-mode nil)
+(set-frame-font "Anonymous Pro-12" nil t)
+
+;; Helper functions:
+
+(defun multi-compile-rust-run ()
+  "Give a list of options for building or running a Rust project."
+  (interactive)
+  (let* ((choices '(("build"  . rustic-cargo-build)
+                    ("test"   . rustic-cargo-test)
+                    ("run"    . rustic-cargo-run)
+                    ("bench"  . rustic-cargo-bench)
+                    ("doc"    . rustic-cargo-doc)
+                    ("clippy" . rustic-cargo-clippy)))
+         (choice (completing-read "Build mode: " choices nil t)))
+    (call-interactively (cdr (assoc choice choices)))))
 
 ;; Package configurations:
 
-(use-package company
-  :ensure
+(use-package corfu
+  :hook (prog-mode . corfu-mode)
   :custom
-  (company-idle-delay 0.25) ;; how long to wait until popup
-  :bind (:map company-active-map
-              ("C-n". company-select-next)
-              ("C-p". company-select-previous)
-              ("M-<". company-select-first)
-              ("M->". company-select-last)))
+  (corfu-auto t)
+  (corfu-auto-delay 0.2)
+  (corfu-auto-prefix 1)
+  (corfu-quit-no-match 'separator))
 
-;; Remove the following section if you want inline types in rust
 (use-package eglot
+  :ensure nil
   :config
-  (add-to-list 'eglot-ignored-server-capabilites :inlayHintProvider))
+  (add-to-list 'eglot-ignored-server-capabilities :inlayHintProvider))
 
-(use-package flyspell-mode
-  :hook (org-mode))
+(use-package flyspell
+  :ensure nil
+  :hook (org-mode . flyspell-mode))
 
-(use-package helm
-  :ensure t
-  :bind (("M-x" . helm-M-x)
-         ("C-x C-f" . helm-find-files)
-         ("C-x C-b" . helm-buffers-list)
-         ("C-x b" . helm-buffers-list)
-         ("M-s g" . helm-grep-repo)
-         ([f1] . helm-buffers-list)
-         (:map helm-map
-               ("<left>" . helm-previous-source)
-               ("<right>" . helm-next-source)))
+(use-package vertico
   :custom
-  (helm-ff-lynx-style-map t)
-  :config
-  (helm-mode 1))
+  (vertico-scroll-margin 0)
+  (vertico-cycle t)
+  :init
+  (vertico-mode))
 
-(defun helm-grep-repo ()
-  "Grep the whole directory"
-  (interactive)
-  (helm-grep-do-git-grep '(4)))
-  
-(use-package magit
-  :ensure t)
+(use-package vertico-directory
+  :ensure nil
+  :after vertico
+  :bind (:map vertico-map
+              ("RET"   . vertico-directory-enter)
+              ("DEL"   . vertico-directory-delete-char)
+              ("M-DEL" . vertico-directory-delete-word))
+  :hook (rfn-eshadow-update-overlay . vertico-directory-tidy))
+
+(use-package orderless
+  :custom
+  (completion-styles '(orderless basic))
+  (completion-category-overrides '((file (styles partial-completion))))
+  (completion-category-defaults nil)
+  (completion-pcm-leading-wildcard t))
+
+(use-package marginalia
+  :bind (:map minibuffer-local-map
+              ("M-A" . marginalia-cycle))
+  :init
+  (marginalia-mode))
+
+(use-package consult
+  :bind (("C-x b" . consult-buffer)
+         ("M-y"   . consult-yank-pop)
+         ("M-s g" . consult-ripgrep)
+         ("M-s l" . consult-line)))
+
+(use-package embark
+  :bind (("C-." . embark-act)
+         ("M-." . embark-dwim)))
+
+(use-package embark-consult
+  :after (embark consult)
+  :hook (embark-collect-mode . consult-preview-at-point-mode))
+
+(use-package savehist
+  :ensure nil
+  :init
+  (savehist-mode))
+
+(use-package magit)
 
 ;; We use both rust-mode and rustic to get the best of both worlds;
 ;; rust-format-buffer works much better than rustic's for some reason.
 
-(use-package rust-mode
-  :ensure t)
+(use-package rust-mode)
 
 (use-package rustic
-  :ensure t
   :bind (:map rust-mode-map
               ("C-c C-r" . multi-compile-rust-run)
               ("C-c C-f" . rust-format-buffer))
-  :config
-  (custom-set-faces
-   '(rustic-compilation-column ((t (:inherit compilation-column-number))))
-   '(rustic-compilation-line ((t (:inherit compilation-line-number))))
-   '(rustic-message ((t (:inherit compilation-message-face))))
-   '(rustic-compilation-error ((t (:inherit compilation-error))))
-   '(rustic-compilation-warning ((t (:inherit compilation-warning))))
-   '(rustic-compilation-info ((t (:inherit compilation-info)))))
+  :custom-face
+  (rustic-compilation-column  ((t (:inherit compilation-column-number))))
+  (rustic-compilation-line    ((t (:inherit compilation-line-number))))
+  (rustic-message             ((t (:inherit compilation-message-face))))
+  (rustic-compilation-error   ((t (:inherit compilation-error))))
+  (rustic-compilation-warning ((t (:inherit compilation-warning))))
+  (rustic-compilation-info    ((t (:inherit compilation-info))))
   :custom
   (compilation-scroll-output 'first-error)
-(rustic-lsp-client 'eglot))
-
-
-(use-package treesit-auto
-  :ensure t
-  :custom
-  (treesit-auto-install 'prompt "Prompt for installation if we're missing a treesitter mode")
-  :config
-  (global-treesit-auto-mode))
+  (rustic-lsp-client 'eglot))
 
 ;; Meta-n will create a new cursor below the current one (or the furthest one down).
 ;; multiple-cursors has a lot of fancy features so I encourage looking into them, I
 ;; only use this one because I'm a simpleton.
 
 (use-package multiple-cursors
-  :ensure t
   :bind (("M-n" . mc/mark-next-like-this)))
 
 (use-package windmove
-  :ensure t
-  :bind (("M-<up>" . windmove-up)
-         ("M-<down>" . windmove-down)
-         ("M-<left>" . windmove-left)
+  :ensure nil
+  :bind (("M-<up>"    . windmove-up)
+         ("M-<down>"  . windmove-down)
+         ("M-<left>"  . windmove-left)
          ("M-<right>" . windmove-right)))
 
-(use-package protobuf-ts-mode
-  :ensure t
-  :mode ("\.proto$" . protobuf-ts-mode))
-
-(defun multi-compile-rust-run ()
-  "Give a list of options for building or running a Rust project"
-  (interactive)
-  (funcall
-   (helm-comp-read "Build mode: " '(("build" . rustic-cargo-build)
-                                    ("test" . rustic-cargo-test)
-                                    ("run" . rustic-cargo-run)
-                                    ("bench" . rustic-cargo-bench)
-                                    ("doc" . rustic-cargo-doc)
-                                    ("clippy" . rustic-cargo-clippy)))))
-
 (use-package solarized-theme
-  :ensure t
   :custom
-  (solarized-distinct-fringe-background t "Make the fringe color dark.")
-  (solarized-distinct-doc-face t "Make doc comments purple.")
+  (solarized-distinct-fringe-background t)
+  (solarized-distinct-doc-face t)
   (solarized-emphasize-indicators t)
   :config
-  (load-theme 'solarized-selenized-white t))
+  (load-theme 'solarized-selenized-black t))
 
-;;(use-package auto-dark
-;;  :ensure t
-;;  :custom
-;;  (auto-dark-themes '((solarized-selenized-black t) (solarized-selenized-light t)))
-;;  :config
-;;  (auto-dark-mode t))
-
-(use-package parinfer-rust-mode
-  :hook (scheme-mode . parinfer-rust-mode))
-
-(use-package vterm
-  :ensure t)
+(use-package auto-dark
+  :after solarized-theme
+  :custom
+  (auto-dark-themes '((solarized-selenized-black) (solarized-selenized-white)))
+  :config
+  (auto-dark-mode t))
 
 (use-package string-inflection
-  :bind (("C-c i" . string-inflection-cycle))) 
+  :bind (("C-c i" . string-inflection-cycle)))
 
-;; Prog mode hooks: 
-
-(add-hook 'prog-mode-hook 'display-line-numbers-mode)
-(add-hook 'prog-mode-hook 'company-mode)
 (add-hook 'prog-mode-hook 'subword-mode)
+(global-display-line-numbers-mode)
 
 ;; Global keybindings:
 
 (bind-keys* ("<prior>" . backward-paragraph)
-            ("<next>" . forward-paragraph)
+            ("<next>"  . forward-paragraph)
             ;; Make control tab always insert a tab character
-            ("C-<tab>" .  (lambda ()
-                            (interactive)
-                            (insert-char 9 1)
-                            (untabify (- (point) 1) (point)))))
-
-;; Custom variables:
-
-(menu-bar-mode -1)
-(tool-bar-mode -1)
-(scroll-bar-mode -1)
-; (add-to-list 'default-frame-alist '(alpha-background . 100))
-(setq inhibit-startup-screen -1
-      column-number-mode t
-      custom-file (concat user-emacs-directory "/custom.el")
-      initial-frame-alist (append initial-frame-alist
-                                  '((width . 0.5))))
-
-(setq-default indent-tabs-mode nil)
-(set-frame-font "Anonymous Pro-12" nil t)
+            ("C-<tab>" . (lambda ()
+                           (interactive)
+                           (insert-char 9 1)
+                           (untabify (- (point) 1) (point)))))

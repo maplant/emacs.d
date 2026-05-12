@@ -1,0 +1,26 @@
+# Package management
+elpa/
+eln-cache/
+tree-sitter/
+.lsp-session-v1
+
+# Per-package state
+auto-save-list/
+eshell/
+racket-mode/
+.mc-lists.el
+recentf
+history
+network-security.data
+session.*
+transient/
+tramp
+projectile-bookmarks.eld
+url/
+request/
+
+# Editor scratch
+*~
+\#*\#
+.\#*
+*.elc
